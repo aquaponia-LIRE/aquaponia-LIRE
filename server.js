@@ -7,70 +7,63 @@ app.use(cors());
 app.use(express.json());
 
 let dados = {
-  temperatura: 0,
-  ph: 0,
-  bomba: false,
-  alimentador: "ativo",
-  ultimaAtualizacao: "-"
+temperatura: 0,
+ph: 0,
+bomba: false,
+alimentador: "ativo",
+ultimaAtualizacao: "-"
 };
 
-// COMANDO PENDENTE PARA O ESP32
 let comandoPendente = "";
 
-// ======================
 // STATUS
-// ======================
 app.get("/", (req, res) => {
-  res.send("API Aquaponia LIRE Online");
+res.send("API Aquaponia LIRE Online");
 });
 
 app.get("/dados", (req, res) => {
-  res.json(dados);
+res.json(dados);
 });
 
 app.post("/dados", (req, res) => {
-  dados = {
-    ...dados,
-    ...req.body,
-    ultimaAtualizacao: new Date().toLocaleString("pt-BR")
-  };
+dados = {
+...dados,
+...req.body,
+ultimaAtualizacao: new Date().toLocaleString("pt-BR")
+};
 
-  res.json({
-    sucesso: true
-  });
+res.json({
+sucesso: true
+});
 });
 
-// ======================
 // COMANDOS
-// ======================
 
 // Site envia comando
 app.post("/comando", (req, res) => {
 
-  comandoPendente = req.body.comando || "";
+comandoPendente = req.body.comando || "";
 
-  console.log("Novo comando:", comandoPendente);
+console.log("Novo comando:", comandoPendente);
 
-  res.json({
-    sucesso: true
-  });
+res.json({
+sucesso: true
+});
 });
 
 // ESP32 consulta comando
 app.get("/comando", (req, res) => {
 
-  res.json({
-    comando: comandoPendente
-  });
+res.json({
+comando: comandoPendente
+});
 
-  // limpa depois de entregar
-  comandoPendente = "";
+comandoPendente = "";
 });
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("Servidor iniciado");
+console.log("Servidor iniciado");
 });
-```
 
