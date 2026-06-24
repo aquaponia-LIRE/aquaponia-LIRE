@@ -38,18 +38,19 @@ button{
   font-weight:bold;
   cursor:pointer;
   color:white;
-  background:#1ABC9C;
 }
-.btn-blue{background:#2980B9}
-.btn-gray{background:#2C3E50}
-.btn-orange{background:#E67E22}
 .btn-purple{background:#9B59B6}
+.btn-green{background:#1ABC9C}
 .atualizacao{
   margin-top:20px;
   color:#1ABC9C;
 }
 .controles{
   margin-top:25px;
+}
+#mensagem{
+  color:#1ABC9C;
+  font-weight:bold;
 }
 </style>
 </head>
@@ -70,11 +71,6 @@ button{
   </div>
 
   <div class="card">
-    <h2>💧 Bomba</h2>
-    <div class="valor" id="bomba">--</div>
-  </div>
-
-  <div class="card">
     <h2>🍽 Alimentador</h2>
     <div class="valor" id="alimentador">--</div>
   </div>
@@ -88,11 +84,13 @@ button{
 <div class="controles">
   <h2>Controles remotos</h2>
 
-  <button class="btn-blue" onclick="enviarComando('ligar_bomba')">Ligar bomba</button>
-  <button class="btn-gray" onclick="enviarComando('desligar_bomba')">Desligar bomba</button>
-  <button class="btn-orange" onclick="enviarComando('auto')">Modo automático</button>
-  <button class="btn-purple" onclick="enviarComando('alimentar')">Alimentar agora</button>
-  <button onclick="enviarComando('home')">Ir para home</button>
+  <button class="btn-purple" onclick="enviarComando('alimentar')">
+    Alimentar agora
+  </button>
+
+  <button class="btn-green" onclick="enviarComando('home')">
+    Ir para home
+  </button>
 
   <p id="mensagem"></p>
 </div>
@@ -106,11 +104,18 @@ async function atualizarDados(){
     const resposta = await fetch(API_DADOS);
     const dados = await resposta.json();
 
-    document.getElementById("temperatura").innerHTML = dados.temperatura + " °C";
-    document.getElementById("ph").innerHTML = dados.ph;
-    document.getElementById("bomba").innerHTML = dados.bomba ? "Ligada" : "Desligada";
-    document.getElementById("alimentador").innerHTML = dados.alimentador;
-    document.getElementById("ultimaAtualizacao").innerHTML = dados.ultimaAtualizacao;
+    document.getElementById("temperatura").innerHTML =
+      dados.temperatura + " °C";
+
+    document.getElementById("ph").innerHTML =
+      dados.ph;
+
+    document.getElementById("alimentador").innerHTML =
+      dados.alimentador || "--";
+
+    document.getElementById("ultimaAtualizacao").innerHTML =
+      dados.ultimaAtualizacao || "--";
+
   }catch(erro){
     console.error(erro);
   }
@@ -120,16 +125,22 @@ async function enviarComando(comando){
   document.getElementById("mensagem").innerHTML = "Enviando comando...";
 
   try{
-    await fetch(API_COMANDO, {
+    const resposta = await fetch(API_COMANDO, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({comando: comando})
     });
 
-    document.getElementById("mensagem").innerHTML = "Comando enviado: " + comando;
+    const retorno = await resposta.json();
+
+    document.getElementById("mensagem").innerHTML =
+      "Comando enviado: " + comando;
+
     setTimeout(atualizarDados, 6000);
+
   }catch(erro){
-    document.getElementById("mensagem").innerHTML = "Erro ao enviar comando.";
+    document.getElementById("mensagem").innerHTML =
+      "Erro ao enviar comando.";
     console.error(erro);
   }
 }
