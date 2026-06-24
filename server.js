@@ -1,69 +1,142 @@
-const express = require("express");
-const cors = require("cors");
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aquaponia LIRE</title>
 
-const app = express();
+<style>
+body{
+  background:#0D1B2A;
+  color:white;
+  font-family:Arial,sans-serif;
+  text-align:center;
+  padding:20px;
+}
+h1{color:#E67E22}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:15px;
+  max-width:1000px;
+  margin:auto;
+}
+.card{
+  background:#162535;
+  border-radius:12px;
+  padding:20px;
+}
+.valor{
+  font-size:34px;
+  font-weight:bold;
+}
+button{
+  border:none;
+  border-radius:8px;
+  padding:12px 18px;
+  margin:6px;
+  font-weight:bold;
+  cursor:pointer;
+  color:white;
+  background:#1ABC9C;
+}
+.btn-blue{background:#2980B9}
+.btn-gray{background:#2C3E50}
+.btn-orange{background:#E67E22}
+.btn-purple{background:#9B59B6}
+.atualizacao{
+  margin-top:20px;
+  color:#1ABC9C;
+}
+.controles{
+  margin-top:25px;
+}
+</style>
+</head>
 
-app.use(cors());
-app.use(express.json());
+<body>
 
-let dados = {
-temperatura: 0,
-ph: 0,
-bomba: false,
-alimentador: "ativo",
-ultimaAtualizacao: "-"
-};
+<h1>🌱 Aquaponia LIRE 🐟</h1>
 
-let comandoPendente = "";
+<div class="grid">
+  <div class="card">
+    <h2>🌡 Temperatura</h2>
+    <div class="valor" id="temperatura">--</div>
+  </div>
 
-// STATUS
-app.get("/", (req, res) => {
-res.send("API Aquaponia LIRE Online");
-});
+  <div class="card">
+    <h2>🧪 pH</h2>
+    <div class="valor" id="ph">--</div>
+  </div>
 
-app.get("/dados", (req, res) => {
-res.json(dados);
-});
+  <div class="card">
+    <h2>💧 Bomba</h2>
+    <div class="valor" id="bomba">--</div>
+  </div>
 
-app.post("/dados", (req, res) => {
-dados = {
-...dados,
-...req.body,
-ultimaAtualizacao: new Date().toLocaleString("pt-BR")
-};
+  <div class="card">
+    <h2>🍽 Alimentador</h2>
+    <div class="valor" id="alimentador">--</div>
+  </div>
+</div>
 
-res.json({
-sucesso: true
-});
-});
+<div class="atualizacao">
+  <h3>📅 Última atualização</h3>
+  <div id="ultimaAtualizacao">--</div>
+</div>
 
-// COMANDOS
+<div class="controles">
+  <h2>Controles remotos</h2>
 
-// Site envia comando
-app.post("/comando", (req, res) => {
+  <button class="btn-blue" onclick="enviarComando('ligar_bomba')">Ligar bomba</button>
+  <button class="btn-gray" onclick="enviarComando('desligar_bomba')">Desligar bomba</button>
+  <button class="btn-orange" onclick="enviarComando('auto')">Modo automático</button>
+  <button class="btn-purple" onclick="enviarComando('alimentar')">Alimentar agora</button>
+  <button onclick="enviarComando('home')">Ir para home</button>
 
-comandoPendente = req.body.comando || "";
+  <p id="mensagem"></p>
+</div>
 
-console.log("Novo comando:", comandoPendente);
+<script>
+const API_DADOS = "https://aquaponia-lire-api.onrender.com/dados";
+const API_COMANDO = "https://aquaponia-lire-api.onrender.com/comando";
 
-res.json({
-sucesso: true
-});
-});
+async function atualizarDados(){
+  try{
+    const resposta = await fetch(API_DADOS);
+    const dados = await resposta.json();
 
-// ESP32 consulta comando
-app.get("/comando", (req, res) => {
+    document.getElementById("temperatura").innerHTML = dados.temperatura + " °C";
+    document.getElementById("ph").innerHTML = dados.ph;
+    document.getElementById("bomba").innerHTML = dados.bomba ? "Ligada" : "Desligada";
+    document.getElementById("alimentador").innerHTML = dados.alimentador;
+    document.getElementById("ultimaAtualizacao").innerHTML = dados.ultimaAtualizacao;
+  }catch(erro){
+    console.error(erro);
+  }
+}
 
-res.json({
-comando: comandoPendente
-});
+async function enviarComando(comando){
+  document.getElementById("mensagem").innerHTML = "Enviando comando...";
 
-comandoPendente = "";
-});
+  try{
+    await fetch(API_COMANDO, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({comando: comando})
+    });
 
-const PORT = process.env.PORT || 3000;
+    document.getElementById("mensagem").innerHTML = "Comando enviado: " + comando;
+    setTimeout(atualizarDados, 6000);
+  }catch(erro){
+    document.getElementById("mensagem").innerHTML = "Erro ao enviar comando.";
+    console.error(erro);
+  }
+}
 
-app.listen(PORT, () => {
-console.log("Servidor iniciado");
-});
+atualizarDados();
+setInterval(atualizarDados, 10000);
+</script>
 
+</body>
+</html>
