@@ -1,3 +1,4 @@
+```javascript
 const express = require("express");
 const cors = require("cors");
 
@@ -14,6 +15,12 @@ let dados = {
   ultimaAtualizacao: "-"
 };
 
+// COMANDO PENDENTE PARA O ESP32
+let comandoPendente = "";
+
+// ======================
+// STATUS
+// ======================
 app.get("/", (req, res) => {
   res.send("API Aquaponia LIRE Online");
 });
@@ -34,8 +41,37 @@ app.post("/dados", (req, res) => {
   });
 });
 
+// ======================
+// COMANDOS
+// ======================
+
+// Site envia comando
+app.post("/comando", (req, res) => {
+
+  comandoPendente = req.body.comando || "";
+
+  console.log("Novo comando:", comandoPendente);
+
+  res.json({
+    sucesso: true
+  });
+});
+
+// ESP32 consulta comando
+app.get("/comando", (req, res) => {
+
+  res.json({
+    comando: comandoPendente
+  });
+
+  // limpa depois de entregar
+  comandoPendente = "";
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log("Servidor iniciado");
 });
+```
+
