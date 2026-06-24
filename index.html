@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -11,24 +12,35 @@ body{
     color:white;
     font-family:Arial,sans-serif;
     text-align:center;
-    padding:30px;
-}
-
-.card{
-    background:#162535;
     padding:20px;
-    border-radius:12px;
-    margin:15px auto;
-    max-width:400px;
-}
-
-.valor{
-    font-size:40px;
-    font-weight:bold;
 }
 
 h1{
     color:#E67E22;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:15px;
+    max-width:1000px;
+    margin:auto;
+}
+
+.card{
+    background:#162535;
+    border-radius:12px;
+    padding:20px;
+}
+
+.valor{
+    font-size:36px;
+    font-weight:bold;
+}
+
+.atualizacao{
+    margin-top:20px;
+    color:#1ABC9C;
 }
 </style>
 </head>
@@ -37,27 +49,76 @@ h1{
 
 <h1>🌱 Aquaponia LIRE 🐟</h1>
 
-<div class="card">
-    <h2>Temperatura</h2>
-    <div class="valor">-- °C</div>
+<div class="grid">
+
+    <div class="card">
+        <h2>🌡 Temperatura</h2>
+        <div class="valor" id="temperatura">--</div>
+    </div>
+
+    <div class="card">
+        <h2>🧪 pH</h2>
+        <div class="valor" id="ph">--</div>
+    </div>
+
+    <div class="card">
+        <h2>💧 Bomba</h2>
+        <div class="valor" id="bomba">--</div>
+    </div>
+
+    <div class="card">
+        <h2>🍽 Alimentador</h2>
+        <div class="valor" id="alimentador">--</div>
+    </div>
+
 </div>
 
-<div class="card">
-    <h2>pH</h2>
-    <div class="valor">--</div>
+<div class="atualizacao">
+    <h3>📅 Última atualização</h3>
+    <div id="ultimaAtualizacao">--</div>
 </div>
 
-<div class="card">
-    <h2>Bomba</h2>
-    <div class="valor">--</div>
-</div>
+<script>
 
-<div class="card">
-    <h2>Alimentador</h2>
-    <div class="valor">--</div>
-</div>
+async function atualizarDados()
+{
+    try
+    {
+        const resposta =
+            await fetch(
+                "https://aquaponia-lire-api.onrender.com/dados"
+            );
 
-<p>Dashboard em construção 🚀</p>
+        const dados = await resposta.json();
+
+        document.getElementById("temperatura").innerHTML =
+            dados.temperatura + " °C";
+
+        document.getElementById("ph").innerHTML =
+            dados.ph;
+
+        document.getElementById("bomba").innerHTML =
+            dados.bomba ? "Ligada" : "Desligada";
+
+        document.getElementById("alimentador").innerHTML =
+            dados.alimentador;
+
+        document.getElementById("ultimaAtualizacao").innerHTML =
+            dados.ultimaAtualizacao;
+    }
+    catch(erro)
+    {
+        console.error(erro);
+    }
+}
+
+atualizarDados();
+
+setInterval(atualizarDados, 10000);
+
+</script>
 
 </body>
 </html>
+```
+
