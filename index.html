@@ -13,22 +13,30 @@ body{
   text-align:center;
   padding:20px;
 }
-h1{color:#E67E22}
+h1{
+  color:#E67E22;
+}
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:15px;
-  max-width:1000px;
+  max-width:1100px;
   margin:auto;
 }
 .card{
   background:#162535;
   border-radius:12px;
   padding:20px;
+  border:1px solid #1F3A5F;
 }
 .valor{
-  font-size:34px;
+  font-size:32px;
   font-weight:bold;
+}
+.sub{
+  color:#9FB3C8;
+  font-size:14px;
+  margin-top:8px;
 }
 button{
   border:none;
@@ -39,8 +47,10 @@ button{
   cursor:pointer;
   color:white;
 }
+.btn-orange{background:#E67E22}
 .btn-purple{background:#9B59B6}
 .btn-green{background:#1ABC9C}
+.btn-gray{background:#2C3E50}
 .atualizacao{
   margin-top:20px;
   color:#1ABC9C;
@@ -52,6 +62,19 @@ button{
   color:#1ABC9C;
   font-weight:bold;
 }
+.status{
+  margin:15px auto;
+  padding:10px;
+  border-radius:8px;
+  max-width:500px;
+  background:#162535;
+}
+.online{
+  color:#2ECC71;
+}
+.offline{
+  color:#E74C3C;
+}
 </style>
 </head>
 
@@ -59,30 +82,59 @@ button{
 
 <h1>🌱 Aquaponia LIRE 🐟</h1>
 
+<div class="status">
+  Status da ESP32: <strong id="statusESP">Verificando...</strong>
+</div>
+
 <div class="grid">
   <div class="card">
     <h2>🌡 Temperatura</h2>
     <div class="valor" id="temperatura">--</div>
+    <div class="sub">Sensor DS18B20</div>
   </div>
 
   <div class="card">
     <h2>🧪 pH</h2>
     <div class="valor" id="ph">--</div>
+    <div class="sub">Faixa ideal: 6.5 a 7.5</div>
   </div>
 
   <div class="card">
     <h2>🍽 Alimentador</h2>
     <div class="valor" id="alimentador">--</div>
+    <div class="sub" id="proximaAlimentacao">Próxima: --</div>
+  </div>
+
+  <div class="card">
+    <h2>📅 Dia atual</h2>
+    <div class="valor" id="diaAtual">--</div>
+    <div class="sub">Ciclo de 7 dias</div>
+  </div>
+
+  <div class="card">
+    <h2>🍽 Alimentações</h2>
+    <div class="valor" id="alimentacoes">--</div>
+    <div class="sub">Total realizadas</div>
+  </div>
+
+  <div class="card">
+    <h2>🔄 Ciclos</h2>
+    <div class="valor" id="ciclos">--</div>
+    <div class="sub">Ciclos completos</div>
   </div>
 </div>
 
 <div class="atualizacao">
-  <h3>📅 Última atualização</h3>
+  <h3>📡 Última atualização</h3>
   <div id="ultimaAtualizacao">--</div>
 </div>
 
 <div class="controles">
   <h2>Controles remotos</h2>
+
+  <button class="btn-orange" onclick="enviarComando('iniciar')">
+    Iniciar ciclo
+  </button>
 
   <button class="btn-purple" onclick="enviarComando('alimentar')">
     Alimentar agora
@@ -105,18 +157,42 @@ async function atualizarDados(){
     const dados = await resposta.json();
 
     document.getElementById("temperatura").innerHTML =
-      dados.temperatura + " °C";
+      dados.temperatura !== "--" ? dados.temperatura + " °C" : "--";
 
     document.getElementById("ph").innerHTML =
-      dados.ph;
+      dados.ph || "--";
 
     document.getElementById("alimentador").innerHTML =
       dados.alimentador || "--";
 
+    document.getElementById("diaAtual").innerHTML =
+      dados.diaAtual || "--";
+
+    document.getElementById("alimentacoes").innerHTML =
+      dados.alimentacoes ?? "--";
+
+    document.getElementById("ciclos").innerHTML =
+      dados.ciclos ?? "--";
+
+    document.getElementById("proximaAlimentacao").innerHTML =
+      "Próxima: " + (dados.proximaAlimentacao || "--");
+
     document.getElementById("ultimaAtualizacao").innerHTML =
       dados.ultimaAtualizacao || "--";
 
+    const status = document.getElementById("statusESP");
+
+    if(dados.ultimaAtualizacao && dados.ultimaAtualizacao !== "--"){
+      status.innerHTML = "Online / recebendo dados";
+      status.className = "online";
+    }else{
+      status.innerHTML = "Sem dados ainda";
+      status.className = "offline";
+    }
+
   }catch(erro){
+    document.getElementById("statusESP").innerHTML = "Erro ao conectar";
+    document.getElementById("statusESP").className = "offline";
     console.error(erro);
   }
 }
@@ -133,8 +209,19 @@ async function enviarComando(comando){
 
     const retorno = await resposta.json();
 
-    document.getElementById("mensagem").innerHTML =
-      "Comando enviado: " + comando;
+    if(retorno.sucesso){
+      let nome = comando;
+
+      if(comando === "iniciar") nome = "Iniciar ciclo";
+      if(comando === "alimentar") nome = "Alimentar agora";
+      if(comando === "home") nome = "Ir para home";
+
+      document.getElementById("mensagem").innerHTML =
+        "Comando enviado: " + nome;
+    }else{
+      document.getElementById("mensagem").innerHTML =
+        "Comando inválido.";
+    }
 
     setTimeout(atualizarDados, 6000);
 
